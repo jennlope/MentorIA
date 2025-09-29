@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MentorIA - Antioquia Educada</title>
+<style>
+body { font-family: Arial; background: #f0f4f8; padding: 20px; }
+#chatbox { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; }
+.message { margin: 10px 0; }
+.user { text-align: right; color: #004080; }
+.mentor { text-align: left; color: #008000; }
+input, select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; margin-right: 5px; }
+button { padding: 10px 15px; border-radius: 5px; border: none; background: #004080; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="chatbox">
+    <div class="message mentor">¡Hola! Soy MentorIA, tu tutor virtual de Antioquia. ¿Qué tema quieres aprender hoy?</div>
+</div>
+
+<select id="nivel">
+    <option value="basico">Básico</option>
+    <option value="intermedio">Intermedio</option>
+    <option value="avanzado">Avanzado</option>
+</select>
+<input type="text" id="userInput" placeholder="Escribe tu pregunta..." />
+<button onclick="sendMessage()">Enviar</button>
+
+<script>
+async function sendMessage() {
+    let input = document.getElementById('userInput');
+    let nivel = document.getElementById('nivel').value;
+    let message = input.value;
+    if(!message) return;
+    let chatbox = document.getElementById('chatbox');
+    chatbox.innerHTML += `<div class="message user">${message}</div>`;
+    input.value = "";
+
+    const response = await fetch('/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: message, nivel: nivel})
+    });
+    const data = await response.json();
+    chatbox.innerHTML += `<div class="message mentor">${data.response}</div>`;
+    chatbox.scrollTop = chatbox.scrollHeight;
+}
+</script>
+</body>
+</html>
