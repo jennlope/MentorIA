@@ -1,51 +1,224 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>MentorIA - Antioquia Educada</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-body { font-family: Arial; background: #f0f4f8; padding: 20px; }
-#chatbox { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; }
-.message { margin: 10px 0; }
-.user { text-align: right; color: #004080; }
-.mentor { text-align: left; color: #008000; }
-input, select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; margin-right: 5px; }
-button { padding: 10px 15px; border-radius: 5px; border: none; background: #004080; color: #fff; cursor: pointer; }
+  :root{ --green:#10B981; --bot-gray:#e9e9ea; --text-black:#111; }
+  *{box-sizing:border-box}
+  body,html{margin:0;padding:0;height:100%;font-family:'Nunito',sans-serif;background:#f0f4f8}
+  .screen{display:none;height:100vh;width:100%}
+  .active{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+
+  /* Pantalla 1 */
+  #screen1{background:var(--green);color:#fff}
+  #screen1 img{width:150px;margin-bottom:18px}
+  #screen1 h1{font-size:2.4rem;margin:0;font-weight:700}
+
+  /* Pantalla 2 */
+  #screen2{background:#fff;color:#111;padding:28px;align-items:center;justify-content:center}
+  #screen2 h2{color:var(--green);font-size:1.6rem;margin:0 0 8px 0}
+  #screen2 p{max-width:560px;margin:8px 0 18px 0}
+  #screen2 img{max-width:220px;margin:16px 0}
+  #screen2 .consent{display:flex;align-items:center;gap:10px;margin-top:12px}
+  #startBtn{margin-top:16px;padding:10px 18px;border-radius:8px;border:none;background:var(--green);color:#fff;cursor:pointer;font-weight:600}
+  #startBtn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Pantalla 3 */
+  #screen3{height:100vh;width:100%}
+  .topbar{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid #ddd}
+  .topbar .back{cursor:pointer;padding:6px;border-radius:6px}
+  .topbar .back:hover{background:#f5f5f5}
+  .topbar img{width:48px;height:48px;border-radius:50%}
+  .topbar .meta{display:flex;flex-direction:column;align-items:flex-start}
+  .topbar h3{margin:0;font-size:1.2rem;font-weight:700}
+  .topbar .status{margin-top:6px;color:var(--green);font-weight:600;font-size:1rem;align-self:flex-start;text-align:left}
+
+  .chat-container{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;padding:12px 14px;background:#f0f4f8;height:calc(100vh - 72px)}
+  #chatbox{max-width:900px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:10px;padding:12px;overflow-y:auto}
+  .bubble-row{display:flex;align-items:flex-end;gap:10px}
+  .bubble-row.bot{justify-content:flex-start}
+  .bubble-row.user{justify-content:flex-end}
+  .avatar{width:40px;height:40px;border-radius:50%;flex-shrink:0}
+  .bubble{max-width:72%;padding:10px 12px;border-radius:12px;font-size:0.95rem;line-height:1.2;word-wrap:break-word}
+  .bubble.bot{background:var(--bot-gray);color:var(--text-black);border-bottom-left-radius:4px}
+  .bubble.user{background:var(--green);color:#fff;border-bottom-right-radius:4px}
+
+  .composer{max-width:900px;width:100%;margin:10px auto 24px auto;display:flex;align-items:center;gap:8px;padding:10px 12px;background:transparent}
+  .input-wrap{flex:1;display:flex;align-items:center;background:#fff;padding:8px;border-radius:999px;border:1px solid #ddd}
+  .input-wrap input{border:0;outline:none;padding:10px 12px;font-size:1rem;background:transparent;color:var(--text-black);flex:1}
+  .send-btn{background:var(--green);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;flex-shrink:0}
+  .send-btn[disabled]{opacity:.5;cursor:not-allowed}
+  .spinner{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  #chatbox{overflow-y:auto;padding-bottom:12px}
+  @media (max-width:600px){ #screen1 h1{font-size:2rem} .topbar img{width:44px;height:44px} .topbar h3{font-size:1.05rem} }
 </style>
 </head>
 <body>
-<div id="chatbox">
-    <div class="message mentor">¡Hola! Soy MentorIA, tu tutor virtual de Antioquia. ¿Qué tema quieres aprender hoy?</div>
+
+<!-- Pantalla 1 -->
+<div id="screen1" class="screen active">
+  <img src="/static/image1.png" alt="MentorIA">
+  <h1>MentorIA</h1>
 </div>
 
-<select id="nivel">
-    <option value="basico">Básico</option>
-    <option value="intermedio">Intermedio</option>
-    <option value="avanzado">Avanzado</option>
-</select>
-<input type="text" id="userInput" placeholder="Escribe tu pregunta..." />
-<button onclick="sendMessage()">Enviar</button>
+<!-- Pantalla 2 -->
+<div id="screen2" class="screen">
+  <h2>Tu Asistente Educativo</h2>
+  <p>Aprende de forma personalizada con un tutor virtual que se adapta a tu ritmo y contexto.</p>
+  <img src="/static/image2.png" alt="Robot asistente">
+  <div class="consent">
+    <input type="checkbox" id="consent">
+    <label for="consent">Autorizo el uso de mis datos</label>
+  </div>
+  <button id="startBtn" disabled>Comenzar</button>
+</div>
+
+<!-- Pantalla 3 (chat) -->
+<div id="screen3" class="screen">
+  <div class="topbar">
+    <div class="back" id="backBtn" title="Volver">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 18L9 12L15 6" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <img src="/static/image1.png" alt="MentorIA" />
+    <div class="meta">
+      <h3>MentorIA</h3>
+      <div class="status">En línea • Tutor virtual personalizado para Antioquia — Disponible para ayudarte</div>
+    </div>
+  </div>
+
+  <div class="chat-container">
+    <div id="chatbox">
+      <div class="bubble-row bot">
+        <img class="avatar" src="/static/image1.png" alt="avatar">
+        <div class="bubble bot">¡Hola! Soy MentorIA, tu tutor virtual de Antioquia. ¿Qué tema quieres aprender hoy?</div>
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="input-wrap" id="inputWrap">
+        <input id="userInput" type="text" placeholder="Escribe tu pregunta..." autocomplete="off" />
+      </div>
+
+      <button id="sendBtn" class="send-btn" title="Enviar" aria-label="Enviar">
+        <!-- avión SVG -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 2L11 13" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
 
 <script>
-async function sendMessage() {
-    let input = document.getElementById('userInput');
-    let nivel = document.getElementById('nivel').value;
-    let message = input.value;
-    if(!message) return;
-    let chatbox = document.getElementById('chatbox');
-    chatbox.innerHTML += `<div class="message user">${message}</div>`;
-    input.value = "";
+  // Mostrar/ocultar pantallas
+  function showScreen(n){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const el = document.getElementById('screen'+n);
+    if(el) el.classList.add('active');
+    if(n===3) scrollChatToBottom();
+  }
 
-    const response = await fetch('/chat', {
+  // Demo: 1 -> 2 después de 1.5s
+  setTimeout(()=>{ showScreen(2); }, 1500);
+
+  // Consentimiento y comenzar
+  const consent = document.getElementById('consent');
+  const startBtn = document.getElementById('startBtn');
+  consent.addEventListener('change', ()=> startBtn.disabled = !consent.checked );
+  startBtn.addEventListener('click', ()=> { if(consent.checked) showScreen(3); });
+
+  // Back
+  document.getElementById('backBtn').addEventListener('click', ()=> showScreen(2) );
+
+  // Chat logic + conexión al backend
+  const chatbox = document.getElementById('chatbox');
+  const userInput = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  function scrollChatToBottom(){ setTimeout(()=> { chatbox.scrollTop = chatbox.scrollHeight; }, 40); }
+
+  function appendUserMessage(text){
+    const row = document.createElement('div');
+    row.className = 'bubble-row user';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble user';
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    chatbox.appendChild(row);
+    scrollChatToBottom();
+  }
+
+  function appendBotMessage(text){
+    const row = document.createElement('div');
+    row.className = 'bubble-row bot';
+    const avatar = document.createElement('img');
+    avatar.className = 'avatar';
+    avatar.src = '/static/image1.png';
+    avatar.alt = 'MentorIA';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble bot';
+    bubble.textContent = text;
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    chatbox.appendChild(row);
+    scrollChatToBottom();
+  }
+
+  function setSendingState(isSending){
+    if(isSending){
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<div class="spinner" aria-hidden="true"></div>';
+    } else {
+      sendBtn.disabled = false;
+      // restore svg
+      sendBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 2L11 13" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+    }
+  }
+
+  // Enviar con Enter o clic
+  sendBtn.addEventListener('click', handleSend);
+  userInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); handleSend(); }
+  });
+
+  async function handleSend(){
+    const text = userInput.value.trim();
+    if(!text) return;
+    appendUserMessage(text);
+    userInput.value = '';
+    setSendingState(true);
+
+    try {
+      // POST a /chat (JSON)
+      const res = await fetch('/chat', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({message: message, nivel: nivel})
-    });
-    const data = await response.json();
-    chatbox.innerHTML += `<div class="message mentor">${data.response}</div>`;
-    chatbox.scrollTop = chatbox.scrollHeight;
-}
+        body: JSON.stringify({ message: text })
+      });
+      if(!res.ok) throw new Error('Respuesta no OK: ' + res.status);
+      const data = await res.json();
+      // Mostrar la respuesta del backend
+      const respuesta = data.response || 'No recibí respuesta del servidor.';
+      appendBotMessage(respuesta);
+    } catch (err) {
+      appendBotMessage('Error: no pude comunicarme con el servidor. ' + (err.message || ''));
+      console.error(err);
+    } finally {
+      setSendingState(false);
+    }
+  }
 </script>
 </body>
 </html>
