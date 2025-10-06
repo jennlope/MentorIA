@@ -31,6 +31,8 @@
 
   /* --- Pantalla 2 (bienvenida) --- */
   #screen2{background:var(--card-bg);color:var(--text-black);display:flex;align-items:center;justify-content:center}
+  /* forzar centrado seguro */
+  #screen2 .wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:22px}
   #screen2 .card{width:100%;max-width:720px;background:var(--card-bg);border-radius:14px;padding:22px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
   #screen2 h2{color:var(--green);font-size:1.6rem;margin:0 0 8px 0}
   #screen2 p{max-width:640px;margin:8px 0 18px 0;color:#333}
@@ -169,33 +171,27 @@ de privacidad</label>
 </div>
 
 <script>
-  // Mostrar/ocultar pantallas por clase .active
+  // ---------- UI helpers (únicos y consistentes) ----------
   function showScreen(n){
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     const el = document.getElementById('screen'+n);
     if(el) el.classList.add('active');
-    if(n===3) scrollChatToBottom();
+    if(n===3) {
+      // asegurar scroll y foco si hay chat
+      setTimeout(()=> {
+        const chatbox = document.getElementById('chatbox');
+        if(chatbox) chatbox.scrollTop = chatbox.scrollHeight;
+        const inp = document.getElementById('userInput');
+        if(inp) inp.focus();
+      }, 60);
+    }
   }
 
-  // Demo: 1 -> 2 después de 1.2s (breve splash)
-  setTimeout(()=> showScreen(2), 1200);
-
-  // Consentimiento y comenzar
-  const consent = document.getElementById('consent');
-  const startBtn = document.getElementById('startBtn');
-  consent.addEventListener('change', ()=> startBtn.disabled = !consent.checked );
-  startBtn.addEventListener('click', ()=> { if(consent.checked) showScreen(3); });
-
-  // Back (vuelve a pantalla 2)
-  document.getElementById('backBtn').addEventListener('click', ()=> showScreen(2) );
-
-  // Chat logic + conexión al backend
-  const chatbox = document.getElementById('chatbox');
-  const userInput = document.getElementById('userInput');
-  const sendBtn = document.getElementById('sendBtn');
-
   function scrollChatToBottom(){
-    setTimeout(()=> { chatbox.scrollTop = chatbox.scrollHeight; }, 60);
+    setTimeout(()=> { 
+      const chatbox = document.getElementById('chatbox');
+      if(chatbox) chatbox.scrollTop = chatbox.scrollHeight; 
+    }, 60);
   }
 
   function appendUserMessage(text){
@@ -218,22 +214,15 @@ de privacidad</label>
     avatar.alt = 'MentorIA';
     const bubble = document.createElement('div');
     bubble.className = 'bubble bot';
-    // mantener saltos de línea si vienen en la respuesta
     bubble.textContent = text;
     row.appendChild(avatar);
     row.appendChild(bubble);
     chatbox.appendChild(row);
-    // fuente (badge) debajo del mensaje del bot
-//    if(source){
-//      const badge = document.createElement('div');
-//      badge.className = 'source-badge';
-//      badge.textContent = 'Fuente: ' + source;
-//      chatbox.appendChild(badge);
-//    }
     scrollChatToBottom();
   }
 
   function setSendingState(isSending){
+    const sendBtn = document.getElementById('sendBtn');
     if(isSending){
       sendBtn.disabled = true;
       sendBtn.innerHTML = '<div class="spinner" aria-hidden="true"></div>';
@@ -246,15 +235,48 @@ de privacidad</label>
     }
   }
 
-  // enviar con Enter o clic
-  sendBtn.addEventListener('click', handleSend);
-  userInput.addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){ e.preventDefault(); handleSend(); }
-  });
+  // Demo: 1 -> 2 después de 1.2s (breve splash)
+  setTimeout(()=> showScreen(2), 1200);
 
-  // Reemplaza ambas funciones handleSend() por esta única definición
+  // ---------- Robust startBtn handler ----------
+  (function(){
+    const consentEl = document.getElementById('consent');
+    const startBtnEl = document.getElementById('startBtn');
+
+    if(!consentEl || !startBtnEl) return;
+
+    // Estado inicial
+    startBtnEl.disabled = !consentEl.checked;
+
+    // Toggle disabled según checkbox (asegurando sólo un listener)
+    consentEl.addEventListener('change', ()=> startBtnEl.disabled = !consentEl.checked );
+
+    // Click handler robusto
+    startBtnEl.addEventListener('click', function(e){
+      e.preventDefault();
+      if(!consentEl.checked) return;
+      try{
+        showScreen(3);
+        setTimeout(()=> {
+          const inp = document.getElementById('userInput');
+          if(inp) inp.focus();
+        }, 220);
+      }catch(err){
+        console.error("Error al intentar cambiar a pantalla 3:", err);
+      }
+    });
+  })();
+
+  // Back (vuelve a pantalla 2)
+  document.getElementById('backBtn').addEventListener('click', ()=> showScreen(2) );
+
+  // ---------- Chat logic ----------
+  const chatbox = document.getElementById('chatbox');
+  const userInput = document.getElementById('userInput');
+
+  // única definición de handleSend
   async function handleSend(){
-    const text = userInput.value.trim();
+    const text = (userInput.value || '').trim();
     if(!text) return;
     appendUserMessage(text);
     userInput.value = '';
@@ -269,24 +291,15 @@ de privacidad</label>
       if(!res.ok) throw new Error('Status ' + res.status);
       const data = await res.json();
 
-      // variables consistentes
       const respuesta = data.response || 'No recibí respuesta del servidor.';
       const source = data.source || 'desconocida';
-
-      // Mostrar mensaje del bot una sola vez
       appendBotMessage(respuesta, source);
 
-      // Si el servidor devolvió quiz_url, abrir nueva pestaña
+      // abrir quiz si viene
       if (data.quiz_url) {
-        try {
-          window.open(data.quiz_url, '_blank', 'noopener,noreferrer');
-        } catch (e) {
-          console.warn("No se pudo abrir la pestaña del quiz automáticamente:", e);
-        }
+        try { window.open(data.quiz_url, '_blank', 'noopener,noreferrer'); } catch(e){ console.warn("No se pudo abrir la pestaña del quiz:", e); }
       }
-
     } catch (err) {
-      // Mostrar error legible en el chat
       appendBotMessage('Error: no pude comunicarme con el servidor. ' + (err.message || ''), 'local');
       console.error(err);
     } finally {
@@ -294,6 +307,22 @@ de privacidad</label>
     }
   }
 
+  // enviar con Enter o clic (listeners añadidos tras definir handleSend)
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.addEventListener('click', handleSend);
+  userInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); handleSend(); }
+  });
+
+  // accesibilidad: enfocar input al mostrar pantalla de chat
+  const observer = new MutationObserver(muts=>{
+    muts.forEach(m=>{
+      if(m.target.classList && m.target.classList.contains('active') && m.target.id==='screen3'){
+        setTimeout(()=> userInput.focus(), 220);
+      }
+    });
+  });
+  observer.observe(document.getElementById('screen3'), { attributes:true });
 
 </script>
 </body>

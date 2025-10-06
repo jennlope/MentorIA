@@ -3,28 +3,103 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Resultado examen - MentorIA</title>
-  <style>body{font-family:Nunito,sans-serif;margin:18px;background:#f7f9fb;color:#111}.card{max-width:920px;margin:18px auto;padding:18px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.06)}h1{color:#3369FF}.correct{color:green;font-weight:700}.wrong{color:#d9534f;font-weight:700}</style>
+  <title>Resultado — {{ topic }} · MentorIA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#fff;
+      --accent:#3369FF;
+      --success:#10B981;
+      --danger:#ef4444;
+      --muted:#6b7280;
+      --maxw:980px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Nunito,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#f7fbff 0%,var(--bg) 100%);color:#0f172a;padding:20px}
+    .wrap{max-width:var(--maxw);margin:18px auto}
+    .card{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 8px 30px rgba(17,24,39,0.06)}
+    header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    h1{margin:0;font-size:1.2rem}
+    .score-badge{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;border-radius:12px;background:linear-gradient(180deg,#fff,#fbfdff);min-width:140px}
+    .score-val{font-size:28px;font-weight:800;color:var(--accent)}
+    .score-meta{color:var(--muted);font-weight:700}
+
+    .results{display:grid;grid-template-columns:1fr;gap:12px;margin-top:18px}
+    .res-card{padding:14px;border-radius:10px;border:1px solid #eef2ff;background:linear-gradient(180deg,#fff,#fcfeff)}
+    .res-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .correct{color:var(--success);font-weight:800}
+    .wrong{color:var(--danger);font-weight:800}
+    .explanation{margin-top:8px;color:#334155;background:rgba(15,23,42,0.03);padding:10px;border-radius:8px;font-size:.95rem}
+
+    .actions{display:flex;gap:10px;margin-top:14px;align-items:center}
+    .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.secondary{background:#fff;border:1px solid #e6eefc;color:#0b1320}
+
+    footer{margin-top:16px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+  </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Resultado: {{ topic }}</h1>
-    <p>Acertaste {{ correct }} de {{ total }} — <strong>{{ pct }}%</strong></p>
+  <div class="wrap">
+    <div class="card" role="main" aria-labelledby="res-title">
+      <header>
+        <div>
+          <h1 id="res-title">Resultado — {{ topic }}</h1>
+          <div style="color:var(--muted);margin-top:6px">Obtuviste <strong>{{ correct }} / {{ total }}</strong> respuestas correctas</div>
+        </div>
 
-    {% for r in results %}
-      <div>
-        <strong>{{ loop.index }}. {{ r.text }}</strong><br>
-        Tu respuesta:
-        {% if r.your == r.correct %}
-          <span class="correct">{{ r.your }}</span>
-        {% else %}
-          <span class="wrong">{{ r.your or 'sin responder' }}</span>
-        {% endif %}<br>
-        Correcta: <strong>{{ r.correct }}</strong><br>
-        <em>{{ r.explanation }}</em>
+        <div class="score-badge" aria-hidden="true">
+          <div class="score-val">{{ pct }}%</div>
+          <div class="score-meta">{{ correct }} de {{ total }}</div>
+        </div>
+      </header>
+
+      <div class="results" id="resultsList">
+        {% for r in results %}
+        <article class="res-card" id="res-{{ r.id }}">
+          <div class="res-header">
+            <div style="max-width:80%">
+              <strong>{{ loop.index }}. {{ r.text }}</strong>
+              <div style="color:var(--muted);margin-top:6px">Tu respuesta: 
+                {% if r.your %}
+                  {% if r.your == r.correct %}
+                    <span class="correct">{{ r.your }}</span>
+                  {% else %}
+                    <span class="wrong">{{ r.your }}</span>
+                  {% endif %}
+                {% else %}
+                  <em class="small">Sin responder</em>
+                {% endif %}
+              </div>
+            </div>
+            <div style="text-align:right">
+              {% if r.your == r.correct %}
+                <div style="color:var(--success);font-weight:800">✔ Correcta</div>
+              {% else %}
+                <div style="color:var(--danger);font-weight:800">✖ Incorrecta</div>
+              {% endif %}
+              <div style="color:var(--muted);margin-top:6px">Resp. correcta: <strong>{{ r.correct }}</strong></div>
+            </div>
+          </div>
+
+          <div class="explanation" aria-label="Explicación">
+            {{ r.explanation }}
+          </div>
+        </article>
+        {% endfor %}
       </div>
-      <hr>
-    {% endfor %}
+
+      <div class="actions">
+        <a href="{{ url_for('quiz_bp.take_quiz', quiz_id=quiz_id) }}" target="_blank" class="btn secondary">Ver examen</a>
+        <button onclick="window.close();" class="btn primary">Cerrar</button>
+      </div>
+
+      <footer>
+        <div>MentorIA · Antioquia Educada</div>
+        <div class="small">¿Querés otro intento? Volvé a pedirlo en el chat.</div>
+      </footer>
+    </div>
   </div>
 </body>
 </html>

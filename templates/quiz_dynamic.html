@@ -3,23 +3,400 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Examen: {{ topic }} - MentorIA</title>
-  <style>/* estilos mínimos, idénticos a lo que te di antes */ body{font-family:Nunito,sans-serif;margin:18px;background:#f7f9fb;color:#111} .card{max-width:920px;margin:18px auto;padding:18px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.06)} h1{color:#3369FF} .question{margin:12px 0;padding:12px;border-radius:8px;background:#fbfcfe} .opts label{display:block;margin:6px 0} button{padding:10px 14px;border-radius:10px;border:0;background:#10B981;color:#fff;font-weight:700;cursor:pointer}</style>
+  <title>Examen — {{ topic }} · MentorIA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#3369FF;
+      --success:#10B981;
+      --danger:#ef4444;
+      --glass: rgba(255,255,255,0.85);
+      --maxw:980px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Nunito,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#f7fbff 0%,var(--bg) 100%);color:#0f172a;line-height:1.45;padding:20px}
+    .container{max-width:var(--maxw);margin:18px auto;background:transparent}
+    .card{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 8px 30px rgba(17,24,39,0.06);overflow:hidden}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+    header .left{display:flex;gap:12px;align-items:center}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#4f46e5);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px}
+    h1{margin:0;font-size:1.25rem}
+    .meta{color:var(--muted);font-size:0.95rem}
+    .top-controls{display:flex;gap:10px;align-items:center}
+    .pill{background:var(--glass);padding:8px 12px;border-radius:999px;border:1px solid rgba(17,24,39,0.04);font-weight:600}
+    .progress-wrap{margin:12px 0}
+    .progress{height:10px;background:#e6eefc;border-radius:999px;overflow:hidden}
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%;transition:width .35s ease}
+
+    /* Question area */
+    .questions{display:grid;grid-template-columns: 1fr 320px;gap:18px}
+    @media (max-width:920px){ .questions{grid-template-columns:1fr} }
+
+    .q-list{display:flex;flex-direction:column;gap:14px}
+    .q-card{border-radius:12px;padding:14px;border:1px solid #eef2ff;background:linear-gradient(180deg,#fff,#fbfdff)}
+    .q-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .q-title{font-weight:700;color:#0b1320}
+    .q-desc{color:var(--muted);font-size:.95rem}
+
+    /* Options */
+    .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+    @media (max-width:600px){ .opts{grid-template-columns:1fr} }
+    /* --- Opciones: radio personalizado con recuadro a la izquierda --- */
+    .opt{
+    position:relative;
+    padding:12px 12px 12px 56px; /* espacio extra a la izquierda para el "recuadro" */
+    border-radius:10px;
+    border:1px solid #e6eefc;
+    background:#fff;
+    cursor:pointer;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    overflow:visible;
+    }
+
+    .opt:hover{
+    transform:translateY(-4px);
+    box-shadow:0 10px 30px rgba(14,30,80,0.06);
+    border-color:rgba(51,105,255,0.15);
+    }
+
+    /* ocultar apariencia nativa pero mantener input accesible */
+    .opt input[type="radio"]{
+    position:absolute;
+    left:20px; /* posición del control nativo (fuera de vista) */
+    top:50%;
+    transform:translateY(-50%);
+    width:18px;
+    height:18px;
+    opacity:0;          /* invisible pero focusable/clickable */
+    pointer-events:none; /* clic lo maneja la .opt */
+    }
+
+    /* el recuadro/círculo visual a la izquierda (por defecto vacío) */
+    .opt::before{
+    content: "";
+    position: absolute;
+    left:18px;
+    top:50%;
+    transform: translateY(-50%);
+    width:20px;
+    height:20px;
+    border-radius:6px;
+    border:2px solid #dbeafe;
+    background: #fff;
+    box-shadow: none;
+    transition: background .16s ease, border-color .16s ease, transform .12s ease, box-shadow .16s ease;
+    display:block;
+    z-index:1;
+    }
+
+    /* punto interior pequeño (oculto por defecto) */
+    .opt::after{
+    content: "";
+    position:absolute;
+    left:23px;
+    top:50%;
+    transform:translateY(-50%) scale(0.6);
+    width:10px;
+    height:10px;
+    border-radius:4px;
+    background: transparent;
+    transition: background .16s ease, transform .12s ease;
+    z-index:2;
+    }
+
+    /* estado seleccionado: rellena el recuadro izquierdo y añade sombra */
+    .opt.selected::before{
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 6px 18px rgba(51,105,255,0.14);
+    transform: translateY(-50%) scale(1.02);
+    }
+
+    /* punto interior visible (contraste) */
+    .opt.selected::after{
+    background: #fff; /* punto blanco dentro del fondo azul */
+    transform: translateY(-50%) scale(1);
+    }
+
+    /* Mantener label con margen para que no choque con el recuadro */
+    .opt .label{
+    margin-left:0; /* ya dejamos el padding general, no hace falta shift adicional */
+    position:relative;
+    z-index:3;
+    }
+
+    .opt .copy{color:var(--muted);font-size:.95rem;margin-top:4px}
+
+    /* Sidebar */
+    .sidebar{position:relative;min-height:160px;padding:12px;border-radius:12px;border:1px dashed #eef2ff;background:linear-gradient(180deg,#fbfdff,#ffffff)}
+    .sidebar h4{margin:0 0 8px 0}
+    .question-list-mini{display:flex;flex-wrap:wrap;gap:8px}
+    .q-mini{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid #e6eefc;cursor:pointer}
+    .q-mini.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+    .submit-row{display:flex;gap:10px;margin-top:12px;align-items:center}
+    .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.secondary{background:#fff;border:1px solid #e6eefc;color:#0b1320}
+
+    footer{margin-top:16px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.95rem}
+
+    /* small touches */
+    .hint{font-size:.9rem;color:var(--muted);margin-top:8px}
+    .small{font-size:.85rem;color:var(--muted)}
+
+  </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Examen: {{ topic }}</h1>
-    <form action="{{ url_for('quiz_bp.grade_quiz_dynamic', quiz_id=quiz_id) }}" method="POST" target="_blank">
-      {% for q in questions %}
-      <div class="question">
-        <strong>{{ loop.index }}. {{ q.text }}</strong>
-        {% for opt in q.options %}
-          <label><input required type="radio" name="{{ q.id }}" value="{{ opt.key }}"> {{ opt.key }}. {{ opt.text }}</label>
-        {% endfor %}
+  <div class="container">
+    <div class="card" role="main" aria-labelledby="exam-title">
+      <header>
+        <div class="left">
+          <div class="logo">M</div>
+          <div>
+            <h1 id="exam-title">Examen: {{ topic }}</h1>
+            <div class="meta">Tiempo estimado: — · {{ questions|length }} preguntas</div>
+          </div>
+        </div>
+
+        <div class="top-controls">
+          <div class="pill">Nivel: Básico</div>
+          <div class="pill">Tipo: Opciones múltiples</div>
+        </div>
+      </header>
+
+      <div class="progress-wrap" aria-hidden="true">
+        <div class="small">Progreso</div>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+          <i id="progBar"></i>
+        </div>
       </div>
-      {% endfor %}
-      <button type="submit">Enviar y Calificar</button>
-    </form>
+
+      <div class="questions" id="questionsWrap">
+        <div class="q-list" id="qList">
+          {% for q in questions %}
+          <section class="q-card" data-qid="{{ q.id }}" data-index="{{ loop.index0 }}" aria-labelledby="q-{{ q.id }}">
+            <div class="q-header">
+              <div class="q-title">Pregunta {{ loop.index }} </div>
+              <div class="q-desc small" id="q-{{ q.id }}">ID: {{ q.id }}</div>
+            </div>
+            <div class="q-body">
+              <div class="q-text">{{ q.text }}</div>
+
+              <div class="opts" role="radiogroup" aria-labelledby="q-{{ q.id }}">
+                {% for opt in q.options %}
+                <label class="opt" tabindex="0">
+                  <input type="radio" name="{{ q.id }}" value="{{ opt.key }}" aria-label="Opción {{ opt.key }}">
+                  <div>
+                    <div class="label">{{ opt.key }}. {{ opt.text }}</div>
+                  </div>
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+          </section>
+          {% endfor %}
+        </div>
+
+        <aside class="sidebar" aria-label="Panel lateral">
+          <h4>Preguntas</h4>
+          <div class="question-list-mini" id="miniList">
+            {% for q in questions %}
+              <div class="q-mini" data-index="{{ loop.index0 }}" title="Ir a pregunta {{ loop.index }}"> {{ loop.index }} </div>
+            {% endfor %}
+          </div>
+
+          <div class="hint">Responde todas las preguntas y presiona <strong>Enviar y Calificar</strong>.</div>
+
+          <div class="submit-row">
+            <form id="quizForm" action="{{ url_for('quiz_bp.grade_quiz_dynamic', quiz_id=quiz_id) }}" method="POST" target="_blank" style="flex:1;display:flex">
+              {% for q in questions %}
+                <!-- inputs reales serán marcados por las radios; aquí no es necesario hidden -->
+              {% endfor %}
+              <button id="submitBtn" class="btn primary" type="submit" disabled>Enviar y Calificar</button>
+            </form>
+
+            <button id="resetBtn" class="btn secondary" type="button">Limpiar</button>
+          </div>
+
+          <div style="margin-top:12px" class="small">Consejo: usá el panel para navegar rápidamente entre preguntas.</div>
+        </aside>
+      </div>
+
+      <footer>
+        <div class="small">MentorIA · Antioquia Educada</div>
+        <div class="small">Buena suerte, mijo ☕</div>
+      </footer>
+    </div>
   </div>
+
+  <script>
+    // UX: manejo de selección, progreso y habilitar submit
+    (function(){
+      const qCards = Array.from(document.querySelectorAll('.q-card'));
+      const submitBtn = document.getElementById('submitBtn');
+      const miniList = document.getElementById('miniList');
+      const progBar = document.getElementById('progBar');
+      const resetBtn = document.getElementById('resetBtn');
+
+      function updateProgress(){
+        const total = qCards.length;
+        let answered = 0;
+        qCards.forEach(c=>{
+          const name = c.getAttribute('data-qid');
+          if(document.querySelector(`input[name="${name}"]:checked`)) answered++;
+        });
+        const pct = Math.round((answered/total)*100);
+        progBar.style.width = pct + '%';
+        progBar.parentElement.setAttribute('aria-valuenow', pct);
+        submitBtn.disabled = answered !== total;
+        // marcar mini bullets
+        Array.from(miniList.children).forEach((el, i)=>{
+          const c = qCards[i];
+          const name = c.getAttribute('data-qid');
+          if(document.querySelector(`input[name="${name}"]:checked`)) el.classList.add('active');
+          else el.classList.remove('active');
+        });
+      }
+
+      // Exponer para que otros scripts (syncOptionVisuals) puedan invocarla
+      window.updateProgress = updateProgress;
+
+      // events: clicking option selects input and styles card
+      document.querySelectorAll('.opt').forEach(opt=>{
+        opt.addEventListener('click', function(e){
+          const input = this.querySelector('input[type="radio"]');
+          if(input) input.checked = true;
+          // mark selected style among siblings
+          const parent = this.parentElement;
+          Array.from(parent.querySelectorAll('.opt')).forEach(o=>o.classList.remove('selected'));
+          this.classList.add('selected');
+          updateProgress();
+        });
+        // keyboard support: press Enter or Space
+        opt.addEventListener('keydown', function(e){
+          if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
+        });
+      });
+
+      // mini navigation
+      Array.from(miniList.children).forEach((el, i)=>{
+        el.addEventListener('click', ()=> {
+          qCards[i].scrollIntoView({behavior:'smooth', block:'center'});
+          // small flash
+          qCards[i].style.transition = 'box-shadow .3s ease';
+        });
+      });
+
+      // reset
+      resetBtn.addEventListener('click', ()=>{
+        document.querySelectorAll('input[type="radio"]').forEach(r=> r.checked = false);
+        document.querySelectorAll('.opt').forEach(o=> o.classList.remove('selected'));
+        updateProgress();
+      });
+
+      // initial
+      updateProgress();
+
+      // Accessibility: focus first unanswered question on load
+      let first = qCards.find(c=> !document.querySelector(`input[name="${c.getAttribute('data-qid')}"]:checked`));
+      if(first) first.scrollIntoView({behavior:'auto', block:'center'});
+    })();
+    // Interceptor en caso de que no quieras mover el HTML: serializa y envía por POST abriendo la respuesta en nueva pestaña
+    // Interceptor mejorado: serializa y envía por POST abriendo la respuesta en nueva pestaña
+    document.getElementById('submitBtn').addEventListener('click', function(e){
+    e.preventDefault();
+
+    // total de preguntas detectado del DOM
+    const qCards = Array.from(document.querySelectorAll('.q-card'));
+    const totalQuestions = qCards.length;
+
+    // recolectar respuestas
+    const answers = {};
+    qCards.forEach(qc=>{
+        const qid = qc.getAttribute('data-qid');
+        const sel = qc.querySelector('input[type="radio"]:checked');
+        if(sel) answers[qid] = sel.value;
+    });
+
+    // si faltan respuestas, avisar y no enviar
+    const answeredCount = Object.keys(answers).length;
+    if(answeredCount !== totalQuestions){
+        // Mensaje visible simple — puedes mejorar con un modal si quieres
+        alert(`Porfa responde todas las preguntas antes de enviar. Falta(n) ${totalQuestions - answeredCount} pregunta(s).`);
+        return;
+    }
+
+    // construir URL y form (usamos los valores Jinja que ya están en el template)
+    const gradeUrl = "{{ url_for('quiz_bp.grade_quiz_dynamic', quiz_id=quiz_id) }}";
+
+    // crear form temporal y poblar con inputs hidden
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = gradeUrl;
+    form.target = '_blank';
+    for(const k in answers){
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = k;
+        inp.value = answers[k];
+        form.appendChild(inp);
+    }
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+    });
+    // ---- Sincronizar estado visual de las tarjetas (.opt) con los radios ----
+    (function syncOptionVisuals(){
+    // devuelve la .opt padre dado un input
+    function optForInput(input){
+        return input ? input.closest('.opt') : null;
+    }
+
+    // actualiza las clases .selected para todas las opciones de una pregunta
+    function refreshSelectedForQuestion(qCard){
+        const qid = qCard.getAttribute('data-qid');
+        const radios = Array.from(qCard.querySelectorAll('input[type="radio"]'));
+        radios.forEach(r => {
+        const optEl = optForInput(r);
+        if(!optEl) return;
+        if(r.checked) optEl.classList.add('selected');
+        else optEl.classList.remove('selected');
+        });
+    }
+
+    // cuando cambia cualquier radio, sincronizar visuales
+    document.querySelectorAll('input[type="radio"]').forEach(radio=>{
+        radio.addEventListener('change', (e)=>{
+        const qCard = radio.closest('.q-card');
+        if(qCard) refreshSelectedForQuestion(qCard);
+        // además actualizar progreso global (si tienes updateProgress)
+        if(typeof updateProgress === 'function') updateProgress();
+        });
+    });
+
+    // soportar captura por teclado: si .opt ya maneja keydown, dejamos; este listener mantiene visuales
+    document.querySelectorAll('.opt').forEach(opt=>{
+        opt.addEventListener('click', function(){
+        const input = this.querySelector('input[type="radio"]');
+        if(input){
+            input.checked = true;
+            // disparar evento change manualmente para mantener compatibilidad
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        });
+    });
+
+    // Inicializar estado visual al cargar (marcar los inputs que ya estén checked)
+    document.querySelectorAll('.q-card').forEach(qc => refreshSelectedForQuestion(qc));
+    })();
+
+
+  </script>
 </body>
 </html>
