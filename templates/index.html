@@ -111,12 +111,13 @@
 <!-- Pantalla 2 (bienvenida / consentimiento) -->
 <div id="screen2" class="screen">
   <div class="wrap card">
-    <h2>Tu Asistente Educativo</h2>
+    <h2>Tu Asistente Educativo color</h2>
     <p>Aprende de forma personalizada con un tutor virtual que se adapta a tu ritmo y contexto.</p>
     <img src="/static/image2.png" alt="Robot asistente">
     <div class="consent" style="justify-content:center; margin-top:16px;">
       <input type="checkbox" id="consent">
-      <label for="consent">Autorizo el uso de mis datos</label>
+      <label for="consent">Aceptar políticas
+de privacidad</label>
     </div>
     <div style="display:flex;justify-content:center">
       <button id="startBtn" disabled>Comenzar</button>
@@ -135,8 +136,11 @@
       </div>
       <img src="/static/image1.png" alt="MentorIA" />
       <div class="meta">
-        <h3>MentorIA</h3>
-        <div class="status">En línea • Tutor virtual personalizado para Antioquia — Disponible para ayudarte</div>
+        <h3 style="color: #3369FF">MentorIA</h3>
+        <div>
+            <span style="color: #3ABF38;">•</span>
+            <span style="color: #10B981;">En línea</span>
+        </div>
       </div>
     </div>
   </div>
@@ -248,6 +252,7 @@
     if(e.key === 'Enter'){ e.preventDefault(); handleSend(); }
   });
 
+  // Reemplaza ambas funciones handleSend() por esta única definición
   async function handleSend(){
     const text = userInput.value.trim();
     if(!text) return;
@@ -256,17 +261,32 @@
     setSendingState(true);
 
     try {
-      const res = await fetch('/chat', {
+      const res = await fetch('/chat_ext', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ message: text })
       });
       if(!res.ok) throw new Error('Status ' + res.status);
       const data = await res.json();
+
+      // variables consistentes
       const respuesta = data.response || 'No recibí respuesta del servidor.';
       const source = data.source || 'desconocida';
+
+      // Mostrar mensaje del bot una sola vez
       appendBotMessage(respuesta, source);
+
+      // Si el servidor devolvió quiz_url, abrir nueva pestaña
+      if (data.quiz_url) {
+        try {
+          window.open(data.quiz_url, '_blank', 'noopener,noreferrer');
+        } catch (e) {
+          console.warn("No se pudo abrir la pestaña del quiz automáticamente:", e);
+        }
+      }
+
     } catch (err) {
+      // Mostrar error legible en el chat
       appendBotMessage('Error: no pude comunicarme con el servidor. ' + (err.message || ''), 'local');
       console.error(err);
     } finally {
@@ -274,15 +294,6 @@
     }
   }
 
-  // accesibilidad: enfocar input al mostrar pantalla de chat
-  const observer = new MutationObserver(muts=>{
-    muts.forEach(m=>{
-      if(m.target.classList && m.target.classList.contains('active') && m.target.id==='screen3'){
-        setTimeout(()=> userInput.focus(), 220);
-      }
-    });
-  });
-  observer.observe(document.getElementById('screen3'), { attributes:true });
 
 </script>
 </body>

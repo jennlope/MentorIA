@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Examen: {{ topic }} - MentorIA</title>
+  <style>/* estilos mínimos, idénticos a lo que te di antes */ body{font-family:Nunito,sans-serif;margin:18px;background:#f7f9fb;color:#111} .card{max-width:920px;margin:18px auto;padding:18px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.06)} h1{color:#3369FF} .question{margin:12px 0;padding:12px;border-radius:8px;background:#fbfcfe} .opts label{display:block;margin:6px 0} button{padding:10px 14px;border-radius:10px;border:0;background:#10B981;color:#fff;font-weight:700;cursor:pointer}</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Examen: {{ topic }}</h1>
+    <form action="{{ url_for('quiz_bp.grade_quiz_dynamic', quiz_id=quiz_id) }}" method="POST" target="_blank">
+      {% for q in questions %}
+      <div class="question">
+        <strong>{{ loop.index }}. {{ q.text }}</strong>
+        {% for opt in q.options %}
+          <label><input required type="radio" name="{{ q.id }}" value="{{ opt.key }}"> {{ opt.key }}. {{ opt.text }}</label>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <button type="submit">Enviar y Calificar</button>
+    </form>
+  </div>
+</body>
+</html>

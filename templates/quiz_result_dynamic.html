@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Resultado examen - MentorIA</title>
+  <style>body{font-family:Nunito,sans-serif;margin:18px;background:#f7f9fb;color:#111}.card{max-width:920px;margin:18px auto;padding:18px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.06)}h1{color:#3369FF}.correct{color:green;font-weight:700}.wrong{color:#d9534f;font-weight:700}</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Resultado: {{ topic }}</h1>
+    <p>Acertaste {{ correct }} de {{ total }} — <strong>{{ pct }}%</strong></p>
+
+    {% for r in results %}
+      <div>
+        <strong>{{ loop.index }}. {{ r.text }}</strong><br>
+        Tu respuesta:
+        {% if r.your == r.correct %}
+          <span class="correct">{{ r.your }}</span>
+        {% else %}
+          <span class="wrong">{{ r.your or 'sin responder' }}</span>
+        {% endif %}<br>
+        Correcta: <strong>{{ r.correct }}</strong><br>
+        <em>{{ r.explanation }}</em>
+      </div>
+      <hr>
+    {% endfor %}
+  </div>
+</body>
+</html>
