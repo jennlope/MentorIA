@@ -17,7 +17,7 @@ MentorIA usa **Gemini** (cuando la API está disponible) y si falla, recurre a u
 1. Clona este repositorio:
 
 ```bash
-git clone https://github.com/tuusuario/mentoria.git
+git clone https://github.com/jennlope/mentoria.git
 cd mentoria
 ```
 
@@ -50,7 +50,7 @@ export GEMINI_API_KEY="tu_api_key_aqui"
 
 Inicia el servidor Flask:
 ```bash
-python MentorIA.py
+python run_quiz.py
 ```
 
 Luego abre en tu navegador:
@@ -104,6 +104,45 @@ El botón solo se habilita al aceptar el uso de datos.
 - **IA:** Google Gemini API + Transformers (fallback)
 
 - **Estilo:** Diseño responsivo con CSS puro
+
+## Exámenes Dinámicos (Quiz / Parciales / Evaluaciones)
+
+MentorIA ahora incluye una funcionalidad de exámenes automáticos e interactivos, generados directamente desde el chat.
+
+### ¿Cómo funciona?
+- El usuario puede escribir frases como:
+
+    - “Hazme un **examen** sobre historia de Antioquia.”
+
+    - “Prepárame un **quiz** de economía paisa.”
+
+    -  “Quiero un **parcial** sobre la colonización antioqueña.”
+
+- MentorIA detecta automáticamente la intención y genera un examen personalizado de **opción múltiple**.
+
+- El examen se abre en una nueva pestaña con un **diseño moderno e intuitivo**, que incluye:
+
+    - Progreso visual animado.
+
+    - Preguntas organizadas por tarjeta.
+
+    - Selección de respuestas con efecto visual en tiempo real.
+
+    - Navegación lateral por preguntas.
+
+    - Botón **“Enviar y Calificar”** que evalúa las respuestas dinámicamente.
+
+- Al terminar, el usuario obtiene su resultado inmediato y explicaciones breves.
+
+### Tecnologías del módulo de examen
+
+- Generación dinámica vía Flask Blueprint (quiz_bp).
+
+- Plantilla Jinja2 responsiva (quiz_dynamic.html).
+
+- Interactividad con JavaScript puro, sin dependencias externas.
+
+- Estado visual sincronizado entre selección, progreso y envío.
 
 ## Solución de Problemas
 
