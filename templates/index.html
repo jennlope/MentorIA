@@ -13,6 +13,7 @@
     --bg:#f0f4f8;
     --card-bg:#ffffff;
     --max-width:920px;
+    --accent:#3369FF;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;padding:0;font-family:'Nunito',sans-serif;background:var(--bg);-webkit-font-smoothing:antialiased}
@@ -61,6 +62,13 @@
   .bubble{max-width:78%;padding:10px 14px;border-radius:14px;font-size:1rem;line-height:1.25;word-wrap:break-word;white-space:pre-wrap}
   .bubble.bot{background:var(--bot-gray);color:var(--text-black);border-bottom-left-radius:6px}
   .bubble.user{background:var(--green);color:#fff;border-bottom-right-radius:6px}
+
+  /* typing bubble specific */
+  .bubble.bot.typing { display:flex; align-items:center; gap:8px; padding:10px 16px; min-width:56px; justify-content:center; }
+  .bubble.bot.typing span { width:8px; height:8px; background:#6b7280; border-radius:50%; display:inline-block; animation:blink 1.4s infinite both; opacity:.3; transform:translateY(0); }
+  .bubble.bot.typing span:nth-child(2){ animation-delay:0.18s; }
+  .bubble.bot.typing span:nth-child(3){ animation-delay:0.36s; }
+  @keyframes blink { 0%,80%,100%{ opacity:.3; transform:translateY(0);} 40%{ opacity:1; transform:translateY(-3px);} }
 
   /* source badge */
   .source-badge{font-size:12px;color:#666;margin-left:56px;margin-top:-6px}
@@ -221,17 +229,37 @@ de privacidad</label>
     scrollChatToBottom();
   }
 
+  // --- typing indicator management ---
+  let typingIndicator = null;
+  function showTyping(){
+    // si ya está, no añadir otra vez
+    if(typingIndicator) return;
+    typingIndicator = document.createElement('div');
+    typingIndicator.className = 'bubble-row bot';
+    typingIndicator.innerHTML = `
+      <img class="avatar" src="/static/image1.png" alt="MentorIA">
+      <div class="bubble bot typing">
+        <span></span><span></span><span></span>
+      </div>`;
+    chatbox.appendChild(typingIndicator);
+    scrollChatToBottom();
+  }
+
+  function hideTyping(){
+    if(typingIndicator){
+      typingIndicator.remove();
+      typingIndicator = null;
+    }
+  }
+
   function setSendingState(isSending){
     const sendBtn = document.getElementById('sendBtn');
     if(isSending){
       sendBtn.disabled = true;
-      sendBtn.innerHTML = '<div class="spinner" aria-hidden="true"></div>';
+      // ya no cambiamos el contenido del botón; mostramos el typing en el chat
     } else {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M22 2L11 13" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>`;
+      // el contenido del botón permanece como la flecha SVG original
     }
   }
 
@@ -281,6 +309,7 @@ de privacidad</label>
     appendUserMessage(text);
     userInput.value = '';
     setSendingState(true);
+    showTyping();
 
     try {
       const res = await fetch('/chat_ext', {
@@ -291,6 +320,7 @@ de privacidad</label>
       if(!res.ok) throw new Error('Status ' + res.status);
       const data = await res.json();
 
+      hideTyping();
       const respuesta = data.response || 'No recibí respuesta del servidor.';
       const source = data.source || 'desconocida';
       appendBotMessage(respuesta, source);
@@ -300,6 +330,7 @@ de privacidad</label>
         try { window.open(data.quiz_url, '_blank', 'noopener,noreferrer'); } catch(e){ console.warn("No se pudo abrir la pestaña del quiz:", e); }
       }
     } catch (err) {
+      hideTyping();
       appendBotMessage('Error: no pude comunicarme con el servidor. ' + (err.message || ''), 'local');
       console.error(err);
     } finally {

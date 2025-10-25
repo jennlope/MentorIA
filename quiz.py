@@ -209,7 +209,11 @@ def chat_ext():
         "dame un quiz de",
         "dame una prueba de",
         "dame un parcial de",
-        "dame un test de"
+        "dame un test de",
+        "hazme un quiz sobre",
+        "hazme un examen sobre",
+        "hazme una prueba sobre",
+        "hazme un test sobre"
     ]
 
     topic = ""

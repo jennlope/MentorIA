@@ -58,7 +58,7 @@ except Exception as e:
 # -----------------------
 cultural_greetings = {
     "saludo": "Q'hubo pues, mijo 🙌. ¿Qué tema quiere aprender hoy?",
-    "despedida": "Listo pues, cuídate — ¡eso es una berraquera!"
+    "despedida": "Listo pues, cuídate — Recordá que aprender es un camino pa’ nunca parar. Seguí curioso, seguí aprendiendo... ¡Pa’lante es pa’ allá, mijo!"
 }
 
 def es_saludo_o_despedida(text: str) -> str:
